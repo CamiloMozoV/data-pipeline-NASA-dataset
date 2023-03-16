@@ -1,0 +1,29 @@
+version: '3.7'
+
+networks:
+  airflow-pyspark:
+    driver: bridge
+    name: airflow-pyspark
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/24
+          gateway: 172.28.0.1
+
+services:
+
+  fetch-data-nasa:
+    build:
+      context: services/fetch-data
+      dockerfile: Dockerfile.nasadata
+      args:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    image: fetch-data-nasa
+    container_name: fetchdatanasa
+    restart: "no"
+    networks:
+      airflow-pyspark:
+        ipv4_address: 172.28.0.3
+    volumes:
+      - /tmp/dockerdata/:/tmp/
