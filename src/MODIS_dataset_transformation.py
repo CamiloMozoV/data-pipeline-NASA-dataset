@@ -5,7 +5,9 @@ from pyspark.sql.functions import (
     unix_timestamp,
     from_unixtime,
     col,
-    lit
+    when,
+    lit,
+    isnull
 )
 from src.utils import read_data_from_s3
 
@@ -29,18 +31,46 @@ def transform_columns_todatetime(df: DataFrame) -> DataFrame:
              .withColumn("acq_datetime", from_unixtime(col("acq_datetime_unix")))\
              .drop("acq_date", "acq_time", "acq_time_min", "acq_time_hour", "acq_date_unix", "acq_datetime_unix")
 
+def transform_confid_percent_to_confid_level(df: DataFrame) -> DataFrame:
+    """Transform the confidence field 'confidence', which is an integer 
+    value, into a textual explanation as expressed in the VIIRS dataset.
+
+    - if the confidence is less than or equal to 40%, the level is low.
+    - if the confidence is more than 40%, but below 100%, then the level is nominal.
+    - Any other value (100%) id high
+
+    Parameters
+    ----------
+    `df`: `pyspark.sql.DataFrame`
+
+    Return
+    ------
+    `df`: `pyspark.sql.DataFrame`
+    """
+    low_confidence = 40
+    high_confidence = 100
+    return df.withColumn("confidence_level", when(col("confidence")<=lit(low_confidence), "low")
+                        .when((col("confidence")>lit(low_confidence)) & (col("confidence") < lit(high_confidence)), "nominal")
+                        .when(isnull(col("confidence")), "high")
+                        .otherwise("high"))
+             
 
 def main(spark_session: SparkSession) -> None:
     MODIS_filename = "MODIS-data.csv"
     df = read_data_from_s3(spark_session, filename=MODIS_filename)
     print("\n=====> Raw Data <=====")
     df.printSchema()
-    df.sample(0.3).show(10, truncate=False)
+    df.show(10, truncate=False)
 
-    df = transform_columns_todatetime(df)
+    df2 = transform_columns_todatetime(df)
     print("\n=====> transf columns to datetime <=====")
-    df.printSchema()
-    df.sample(0.3).show(10, truncate=False)
+    df2.printSchema()
+    df2.show(10, truncate=False)
+
+    df3 = transform_confid_percent_to_confid_level(df2)
+    print("\n=====> transf confidence columns <=====")
+    df3.printSchema()
+    df3.show(10, truncate=False)
 
 if __name__=="__main__":
     # Create a session
