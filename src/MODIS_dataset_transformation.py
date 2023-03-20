@@ -1,7 +1,7 @@
 import os
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as F
-from src.utils import read_data_from_s3
+from src.utils import read_data_from_s3, save_data_s3
 
 def transform_columns_todatetime(df: DataFrame) -> DataFrame:
     """Transform the columns corresponding to the date field 'acq_date' 
@@ -60,33 +60,30 @@ def modis_data_transformation(df: DataFrame) -> DataFrame:
     -------
     `pyspark.sql.DataFrame`
     """
-    return (df.transform(transform_columns_todatetime)
-             .transform(transform_confid_percent_to_confid_level)
-             .withColumn("bright_ti4", F.lit(None))\
-             .withColumn("bright_ti5", F.lit(None))      
+    return (df.transform(transform_columns_todatetime)              # transf columns to datetime
+             .transform(transform_confid_percent_to_confid_level)   # transf confidence columns 
+             .withColumn("bright_ti4", F.lit(None).cast("string"))
+             .withColumn("bright_ti5", F.lit(None).cast("string"))      
             )
 
 def main(spark_session: SparkSession) -> None:
-    MODIS_filename = "MODIS-data.csv"
-    df = read_data_from_s3(spark_session, filename=MODIS_filename)
-    print("\n=====> Raw Data <=====")
-    df.printSchema()
-    df.show(10, truncate=False)
 
-    df2 = transform_columns_todatetime(df)
-    print("\n=====> transf columns to datetime <=====")
-    df2.printSchema()
-    df2.show(10, truncate=False)
+    BUCKET_NAME = "project-bucket-tests"
+    S3_KEY = "test-data"
+    MODIS_FILENAME = "MODIS-data.csv"
 
-    df3 = transform_confid_percent_to_confid_level(df2)
-    print("\n=====> transf confidence columns <=====")
-    df3.printSchema()
-    df3.show(10, truncate=False)
+    raw_df = read_data_from_s3(spark_session, BUCKET_NAME, S3_KEY, MODIS_FILENAME)
+    
+    # MODIS data transformation
+    clean_df = modis_data_transformation(raw_df)
 
-    df4 = modis_data_transformation(df)
-    print("\n=====> MODIS data transf  <=====")
-    df4.printSchema()
-    df4.show(10, truncate=False)
+    # Uploading Data
+    save_data_s3(clean_df, 
+                 bucket_name=BUCKET_NAME,
+                 s3_key=S3_KEY,
+                 filename=f"clean-{MODIS_FILENAME}"
+                )
+
 
 if __name__=="__main__":
     # Create a session
