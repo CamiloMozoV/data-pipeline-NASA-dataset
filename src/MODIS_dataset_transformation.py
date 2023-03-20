@@ -1,14 +1,6 @@
 import os
 from pyspark.sql import SparkSession, DataFrame
-from pyspark.sql.functions import (
-    expr,
-    unix_timestamp,
-    from_unixtime,
-    col,
-    when,
-    lit,
-    isnull
-)
+from pyspark.sql import functions as F
 from src.utils import read_data_from_s3
 
 def transform_columns_todatetime(df: DataFrame) -> DataFrame:
@@ -24,12 +16,13 @@ def transform_columns_todatetime(df: DataFrame) -> DataFrame:
     ------
     `df` : `pyspark.sql.DataFrame`
     """
-    return df.withColumn("acq_time_min", expr("acq_time % 100"))\
-             .withColumn("acq_time_hour", expr("int(acq_time / 100)"))\
-             .withColumn("acq_date_unix", unix_timestamp(col("acq_date")))\
-             .withColumn("acq_datetime_unix", expr("acq_date_unix + acq_time_min * 60 + acq_time_hour * 3600"))\
-             .withColumn("acq_datetime", from_unixtime(col("acq_datetime_unix")))\
+    return (df.withColumn("acq_time_min", F.expr("acq_time % 100"))
+             .withColumn("acq_time_hour", F.expr("int(acq_time / 100)"))
+             .withColumn("acq_date_unix", F.unix_timestamp("acq_date"))
+             .withColumn("acq_datetime_unix", F.expr("acq_date_unix + acq_time_min * 60 + acq_time_hour * 3600"))
+             .withColumn("acq_datetime", F.from_unixtime("acq_datetime_unix"))
              .drop("acq_date", "acq_time", "acq_time_min", "acq_time_hour", "acq_date_unix", "acq_datetime_unix")
+            )
 
 def transform_confid_percent_to_confid_level(df: DataFrame) -> DataFrame:
     """Transform the confidence field 'confidence', which is an integer 
@@ -49,11 +42,29 @@ def transform_confid_percent_to_confid_level(df: DataFrame) -> DataFrame:
     """
     low_confidence = 40
     high_confidence = 100
-    return df.withColumn("confidence_level", when(col("confidence")<=lit(low_confidence), "low")
-                        .when((col("confidence")>lit(low_confidence)) & (col("confidence") < lit(high_confidence)), "nominal")
-                        .when(isnull(col("confidence")), "high")
+    return (df.withColumn("confidence_level", F.when(F.col("confidence") <= F.lit(low_confidence), "low")
+                        .when((F.col("confidence") > F.lit(low_confidence)) & (F.col("confidence") < F.lit(high_confidence)), "nominal")
+                        .when(F.isnull(F.col("confidence")), "high")
                         .otherwise("high"))
-             
+             .drop("confidence")
+            )
+
+def modis_data_transformation(df: DataFrame) -> DataFrame:
+    """Perform data transformation to MODIS dataset.
+
+    Parameter
+    ---------
+    `df`: `pyspark.sql.DataFrame`
+
+    Return
+    -------
+    `pyspark.sql.DataFrame`
+    """
+    return (df.transform(transform_columns_todatetime)
+             .transform(transform_confid_percent_to_confid_level)
+             .withColumn("bright_ti4", F.lit(None))\
+             .withColumn("bright_ti5", F.lit(None))      
+            )
 
 def main(spark_session: SparkSession) -> None:
     MODIS_filename = "MODIS-data.csv"
@@ -71,6 +82,11 @@ def main(spark_session: SparkSession) -> None:
     print("\n=====> transf confidence columns <=====")
     df3.printSchema()
     df3.show(10, truncate=False)
+
+    df4 = modis_data_transformation(df)
+    print("\n=====> MODIS data transf  <=====")
+    df4.printSchema()
+    df4.show(10, truncate=False)
 
 if __name__=="__main__":
     # Create a session
