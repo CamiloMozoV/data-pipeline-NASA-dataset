@@ -50,6 +50,7 @@ services:
         ipv4_address: 172.28.0.4
     volumes:
       - ./src/:/opt/bitnami/spark/src/
+      - ./tests/:/opt/bitnami/spark/tests/
   
   spark-worker:
     build:
@@ -75,5 +76,6 @@ services:
         ipv4_address: 172.28.0.5
     volumes:
       - ./src/:/opt/bitnami/spark/src/
+      - ./tests/:/opt/bitnami/spark/tests/
     depends_on:
       - spark-master
