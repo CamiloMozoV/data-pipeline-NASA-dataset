@@ -3,7 +3,7 @@ import pytest
 from pyspark.sql import SparkSession
 from pyspark.sql import types as T
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def mock_raw_data_modis(spark_session: SparkSession):
     
     raw_schema = T.StructType([
@@ -35,7 +35,7 @@ def mock_raw_data_modis(spark_session: SparkSession):
     
     return raw_df
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def mock_datetime_transf_data_modis(spark_session: SparkSession):
 
     datetime_transf_schema = T.StructType([
@@ -65,7 +65,7 @@ def mock_datetime_transf_data_modis(spark_session: SparkSession):
     )
     return datetime_transf_df
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def mock_confidence_transf_data_modis(spark_session: SparkSession):
 
     confidence_transf_schema = T.StructType([
@@ -95,3 +95,35 @@ def mock_confidence_transf_data_modis(spark_session: SparkSession):
         schema=confidence_transf_schema
     )
     return confidence_transf_df
+
+@pytest.fixture(scope="session")
+def mock_modis_data_transformation(spark_session: SparkSession):
+
+    data_transf_schema = T.StructType([
+        T.StructField("latitude", T.DoubleType(), True),
+        T.StructField("longitude", T.DoubleType(), True),
+        T.StructField("brightness", T.DoubleType(), True),
+        T.StructField("scan", T.DoubleType(), True),
+        T.StructField("track", T.DoubleType(), True),
+        T.StructField("satellite", T.StringType(), True),
+        T.StructField("version", T.StringType(), True),
+        T.StructField("bright_t31", T.DoubleType(), True),
+        T.StructField("frp", T.DoubleType(), True),
+        T.StructField("daynight", T.StringType(), True),
+        T.StructField("acq_datetime", T.StringType(), True),
+        T.StructField("confidence_level", T.StringType(), False),
+        T.StructField("bright_ti4", T.StringType(), True),
+        T.StructField("bright_ti5", T.StringType(), True)
+    ])
+
+    data_transf_df = spark_session.createDataFrame(
+        data=[
+            (-20.10942, 148.14326, 314.39, 1.0, 1.0, "T", "6.1NRT", 296.82, 8.8, "D", "2023-03-15 00:05:00", "low", None, None),      
+            (-23.21878, 148.91298, 314.08, 1.04, 1.02,"T", "6.1NRT", 298.73, 7.4, "D", "2023-03-15 00:05:00", "nominal", None, None),      
+            (-24.4318, 151.83102, 307.98, 1.48, 1.2, "T", "6.1NRT", 292.72, 8.79, "D", "2023-03-15 00:05:00", "nominal", None, None),      
+            (-25.70059, 149.48932, 313.9, 1.14, 1.06, "T", "6.1NRT", 294.55, 5.15, "D", "2023-03-15 00:05:00", "nominal", None, None),      
+            (-26.7598, 147.14514, 361.54, 1.0, 1.0, "T", "6.1NRT", 306.81, 79.4, "D", "2023-03-15 00:05:00", "high", None, None)
+        ],
+        schema=data_transf_schema
+    )
+    return data_transf_df
