@@ -65,3 +65,33 @@ def mock_datetime_transf_data_modis(spark_session: SparkSession):
     )
     return datetime_transf_df
 
+@pytest.fixture()
+def mock_confidence_transf_data_modis(spark_session: SparkSession):
+
+    confidence_transf_schema = T.StructType([
+        T.StructField("latitude", T.DoubleType(), True),
+        T.StructField("longitude", T.DoubleType(), True),
+        T.StructField("brightness", T.DoubleType(), True),
+        T.StructField("scan", T.DoubleType(), True),
+        T.StructField("track", T.DoubleType(), True),
+        T.StructField("acq_date", T.TimestampType(), True),
+        T.StructField("acq_time", T.IntegerType(), True),
+        T.StructField("satellite", T.StringType(), True),
+        T.StructField("version", T.StringType(), True),
+        T.StructField("bright_t31", T.DoubleType(), True),
+        T.StructField("frp", T.DoubleType(), True),
+        T.StructField("daynight", T.StringType(), True),
+        T.StructField("confidence_level", T.StringType(), False),
+    ])
+
+    confidence_transf_df = spark_session.createDataFrame(
+        data=[
+            (-20.10942, 148.14326, 314.39, 1.0, 1.0, datetime(2023,3,15,0,0,0), 5, "T", "6.1NRT", 296.82, 8.8, "D", "low"),
+            (-23.21878, 148.91298, 314.08, 1.04, 1.02, datetime(2023,3,15,0,0,0), 5, "T", "6.1NRT", 298.73, 7.4, "D", "nominal"),
+            (-24.4318, 151.83102, 307.98, 1.48, 1.2, datetime(2023,3,15,0,0,0), 5, "T", "6.1NRT", 292.72, 8.79, "D", "nominal"),
+            (-25.70059, 149.48932, 313.9, 1.14, 1.06, datetime(2023,3,15,0,0,0), 5, "T", "6.1NRT", 294.55, 5.15, "D", "nominal"),
+            (-26.7598, 147.14514, 361.54, 1.0, 1.0, datetime(2023,3,15,0,0,0), 5, "T", "6.1NRT", 306.81, 79.4, "D", "high")
+        ],
+        schema=confidence_transf_schema
+    )
+    return confidence_transf_df

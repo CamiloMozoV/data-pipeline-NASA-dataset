@@ -1,5 +1,8 @@
 from chispa.dataframe_comparer import assert_df_equality
-from src.MODIS_dataset_transformation import transform_columns_todatetime
+from src.MODIS_dataset_transformation import (
+    transform_columns_todatetime,
+    transform_confid_percent_to_confid_level
+)
 
 def test_transform_columns_todatetime(spark_session, 
                                       mock_raw_data_modis,
@@ -15,3 +18,16 @@ def test_transform_columns_todatetime(spark_session,
     assert_df_equality(output_df, expected_df)
     assert output_df.columns == columns_expected_df
 
+def test_transform_confid_percent_to_confid_level(spark_session,
+                                                  mock_raw_data_modis,
+                                                  mock_confidence_transf_data_modis):
+    
+    output_df = transform_confid_percent_to_confid_level(mock_raw_data_modis)
+    expected_df = mock_confidence_transf_data_modis
+
+    columns_expected_df = ["latitude", "longitude", "brightness", "scan",
+                           "track", "acq_date", "acq_time", "satellite", "version", 
+                           "bright_t31", "frp", "daynight", "confidence_level"]
+    
+    assert output_df.columns == columns_expected_df
+    assert_df_equality(output_df, expected_df)
