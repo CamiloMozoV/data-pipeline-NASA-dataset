@@ -24,13 +24,35 @@ def transform_columns_todatetime(df: DataFrame) -> DataFrame:
              .drop("acq_date", "acq_time", "acq_time_min", "acq_time_hour", "acq_date_unix", "acq_datetime_unix")
             )
 
+def viirs_data_transformation(df: DataFrame) -> DataFrame:
+    """Perform data transformation to VIIRS dataset.
+    
+    Parameter
+    ---------
+    `df`: `pyspark.sql.DataFrame`
+
+    Return
+    -------
+    `pyspark.sql.DataFrame`
+    """
+    return (df.transform(transform_columns_todatetime)
+            .withColumnRenamed("confidence", "confidence_level")
+            .withColumn("brightness", F.lit(None).cast("string"))
+            .withColumn("bright_t3i", F.lit(None).cast("string"))
+        )
+
 def main(spark_session: SparkSession) -> None:
 
     BUCKET_NAME = "project-bucket-tests"
     S3_KEY = "test-data"
-    VIIRS_FILENAME = "VIIRS-data.csv"
+    VIIRS_FILENAME = "VIIRS-data"
 
-    raw_df = read_data_from_s3(spark_session, BUCKET_NAME, S3_KEY, VIIRS_FILENAME)
+    raw_df = read_data_from_s3(spark_session, BUCKET_NAME, S3_KEY, filename=f"{VIIRS_FILENAME}.csv")
+
+    # VIIRS data transformation
+    clean_df = viirs_data_transformation(raw_df)
+
+    save_data_s3(clean_df, BUCKET_NAME, S3_KEY, filename=f"clean-{VIIRS_FILENAME}")
     
 
 if __name__=="__main__":
