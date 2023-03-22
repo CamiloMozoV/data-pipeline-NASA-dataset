@@ -70,9 +70,9 @@ def main(spark_session: SparkSession) -> None:
 
     BUCKET_NAME = "project-bucket-tests"
     S3_KEY = "test-data"
-    MODIS_FILENAME = "MODIS-data.csv"
+    MODIS_FILENAME = "MODIS-data"
 
-    raw_df = read_data_from_s3(spark_session, BUCKET_NAME, S3_KEY, MODIS_FILENAME)
+    raw_df = read_data_from_s3(spark_session, BUCKET_NAME, S3_KEY, filename=f"{MODIS_FILENAME}.csv")
     
     # MODIS data transformation
     clean_df = modis_data_transformation(raw_df)
