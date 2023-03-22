@@ -1,7 +1,7 @@
 import os 
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as F
-from src.utils import read_data_from_s3, save_data_s3
+from src.utils import read_csv_data_from_s3, save_csv_data_to_s3
 
 def transform_columns_todatetime(df: DataFrame) -> DataFrame:
     """Transform the columns corresponding to the date field 'acq_date' 
@@ -47,12 +47,12 @@ def main(spark_session: SparkSession) -> None:
     S3_KEY = "test-data"
     VIIRS_FILENAME = "VIIRS-data"
 
-    raw_df = read_data_from_s3(spark_session, BUCKET_NAME, S3_KEY, filename=f"{VIIRS_FILENAME}.csv")
+    raw_df = read_csv_data_from_s3(spark_session, BUCKET_NAME, S3_KEY, filename=f"{VIIRS_FILENAME}.csv")
 
     # VIIRS data transformation
     clean_df = viirs_data_transformation(raw_df)
 
-    save_data_s3(clean_df, BUCKET_NAME, S3_KEY, filename=f"clean-{VIIRS_FILENAME}")
+    save_csv_data_to_s3(clean_df, BUCKET_NAME, S3_KEY, filename=f"clean-{VIIRS_FILENAME}")
     
 
 if __name__=="__main__":

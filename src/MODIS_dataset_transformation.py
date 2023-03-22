@@ -1,7 +1,7 @@
 import os
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as F
-from src.utils import read_data_from_s3, save_data_s3
+from src.utils import read_csv_data_from_s3, save_csv_data_to_s3
 
 def transform_columns_todatetime(df: DataFrame) -> DataFrame:
     """Transform the columns corresponding to the date field 'acq_date' 
@@ -72,13 +72,13 @@ def main(spark_session: SparkSession) -> None:
     S3_KEY = "test-data"
     MODIS_FILENAME = "MODIS-data"
 
-    raw_df = read_data_from_s3(spark_session, BUCKET_NAME, S3_KEY, filename=f"{MODIS_FILENAME}.csv")
+    raw_df = read_csv_data_from_s3(spark_session, BUCKET_NAME, S3_KEY, filename=f"{MODIS_FILENAME}.csv")
     
     # MODIS data transformation
     clean_df = modis_data_transformation(raw_df)
 
     # Uploading Data
-    save_data_s3(clean_df, 
+    save_csv_data_to_s3(clean_df, 
                  bucket_name=BUCKET_NAME,
                  s3_key=S3_KEY,
                  filename=f"clean-{MODIS_FILENAME}"

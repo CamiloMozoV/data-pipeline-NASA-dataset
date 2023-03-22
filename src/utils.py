@@ -1,6 +1,6 @@
 from pyspark.sql import SparkSession, DataFrame
 
-def read_data_from_s3(spark_session: SparkSession, 
+def read_csv_data_from_s3(spark_session: SparkSession, 
                       bucket_name: str, 
                       s3_key: str, 
                       filename: str) -> DataFrame:
@@ -24,7 +24,7 @@ def read_data_from_s3(spark_session: SparkSession,
                                   sep=','
                                 )
 
-def save_data_s3(df: DataFrame,
+def save_csv_data_to_s3(df: DataFrame,
                  bucket_name: str,
                  s3_key: str, 
                  filename: str) -> None:
