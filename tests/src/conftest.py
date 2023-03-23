@@ -205,7 +205,7 @@ def mock_viirs_data_transformation(spark_session: SparkSession):
         T.StructField("daynight", T.StringType(), True),
         T.StructField("acq_datetime", T.StringType(), True),
         T.StructField("brightness", T.StringType(), True),
-        T.StructField("bright_t3i", T.StringType(), True)
+        T.StructField("bright_t31", T.StringType(), True)
     ])
 
     data_transf_df = spark_session.createDataFrame(

@@ -24,7 +24,7 @@ def test_viirs_data_transformation(mock_raw_data_viirs,
     columns_expected_df = ["latitude", "longitude", "bright_ti4", "scan",
                            "track", "satellite", "confidence_level", "version", 
                            "bright_ti5", "frp", "daynight", "acq_datetime",
-                           "brightness", "bright_t3i"]
+                           "brightness", "bright_t31"]
     
     assert output_df.columns == columns_expected_df
     assert_df_equality(output_df, expected_df)
