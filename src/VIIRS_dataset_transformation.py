@@ -57,16 +57,17 @@ def main(spark_session: SparkSession) -> None:
 
 if __name__=="__main__":
     # Create a session
-    spark_session = SparkSession.builder\
-                    .appName("Data Nasa Transformation")\
-                    .master("spark://spark-master:7077")\
-                    .config("spark.jars", "/opt/bitnami/spark/jars/hadoop-aws-3.3.4.jar")\
-                    .config("spark.jars", "/opt/bitnami/spark/jars/aws-java-sdk-1.12.319.jar")\
-                    .config("spark.jars", "/opt/bitnami/spark/jars/hadoop-common-3.3.4.jar")\
-                    .config("spark.jars", "/opt/bitnami/spark/jars/hadoop-client-3.3.4.jar")\
-                    .config("spark.jars", "/opt/bitnami/spark/jars/aws-java-sdk-s3-1.12.319.jar")\
-                    .config("spark.sql.adaptive.enable", False)\
+    spark_session = (SparkSession.builder
+                    .appName("Data Nasa Transformation")
+                    .master("spark://spark-master:7077")
+                    .config("spark.jars", "/opt/bitnami/spark/jars/hadoop-aws-3.3.4.jar")
+                    .config("spark.jars", "/opt/bitnami/spark/jars/aws-java-sdk-1.12.319.jar")
+                    .config("spark.jars", "/opt/bitnami/spark/jars/hadoop-common-3.3.4.jar")
+                    .config("spark.jars", "/opt/bitnami/spark/jars/hadoop-client-3.3.4.jar")
+                    .config("spark.jars", "/opt/bitnami/spark/jars/aws-java-sdk-s3-1.12.319.jar")
+                    .config("spark.sql.adaptive.enable", False)
                     .getOrCreate()
+                )
     
     spark_session.sparkContext._jsc.hadoopConfiguration().set("fs.s3a.access.key", os.getenv("AWS_ACCESS_KEY_ID"))
     spark_session.sparkContext._jsc.hadoopConfiguration().set("fs.s3a.secret.key", os.getenv("AWS_SECRET_ACCESS_KEY"))
