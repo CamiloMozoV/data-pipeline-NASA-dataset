@@ -3,6 +3,15 @@ from pyspark.sql import SparkSession
 from src.utils import read_csv_data_from_s3, save_parquet_data_to_s3
 
 def datasets_union(spark_session: SparkSession) -> None:
+    """Union (or merge) the two datasets: 
+    - MODIS 
+    - VIIRS
+    for this case.
+
+    Parameter
+    ---------
+    `spark_session`: `pyspark.sql.SparkSession`
+    """
 
     BUCKET_NAME = "project-bucket-tests"
     S3_KEY = "test-data"
