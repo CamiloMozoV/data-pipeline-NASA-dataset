@@ -1,0 +1,22 @@
+ARG AIRFLOW_BASE_IMAGE="apache/airflow:2.5.0"
+FROM ${AIRFLOW_BASE_IMAGE}
+
+# Install OpenJDK
+USER root
+RUN apt update && \
+    apt install -y openjdk-11-jdk && \
+    apt install -y ant && \
+    apt clean
+
+# Set JAVA_HOME
+ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64/
+RUN export JAVA_HOME
+
+USER airflow
+RUN pip install --user --no-cache-dir --upgrade pip &\
+    pip install --user --no-cache-dir \
+    psycopg2-binary>=2.7.4 \
+    pyspark \
+    apache-airflow-providers-docker==3.5.0 \
+    apache-airflow-providers-apache-spark==4.0.0 \
+    apache-airflow-providers-amazon==7.2.1 \
