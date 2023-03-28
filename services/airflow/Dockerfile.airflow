@@ -1,6 +1,11 @@
 ARG AIRFLOW_BASE_IMAGE="apache/airflow:2.5.0"
 FROM ${AIRFLOW_BASE_IMAGE}
 
+ARG AWS_ACCESS_KEY_ID
+ENV AWS_ACCESS_KEY_ID ${AWS_ACCESS_KEY_ID}
+
+ARG AWS_SECRET_ACCESS_KEY
+ENV AWS_SECRET_ACCESS_KEY ${AWS_SECRET_ACCESS_KEY}
 # Install OpenJDK
 USER root
 RUN apt update && \
@@ -12,11 +17,22 @@ RUN apt update && \
 ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64/
 RUN export JAVA_HOME
 
+RUN mkdir -p /opt/bitnami/spark/jars/
+RUN curl https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.2/hadoop-aws-3.3.2.jar --output /opt/bitnami/spark/jars/hadoop-aws-3.3.2.jar && \
+    curl https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-s3/1.12.319/aws-java-sdk-s3-1.12.319.jar --output /opt/bitnami/spark/jars/aws-java-sdk-s3-1.12.319.jar && \
+    curl https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-core/1.12.319/aws-java-sdk-core-1.12.319.jar --output /opt/bitnami/spark/jars/aws-java-sdk-core-1.12.319.jar && \
+    curl https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk/1.12.319/aws-java-sdk-1.12.319.jar --output /opt/bitnami/spark/jars/aws-java-sdk-1.12.319.jar && \
+    curl https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-client/3.3.4/hadoop-client-3.3.4.jar --output /opt/bitnami/spark/jars/hadoop-client-3.3.4.jar && \
+    curl https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-common/3.3.4/hadoop-common-3.3.4.jar --output /opt/bitnami/spark/jars/hadoop-common-3.3.4.jar && \
+    curl https://repo1.maven.org/maven2/net/java/dev/jets3t/jets3t/0.9.4/jets3t-0.9.4.jar --output /opt/bitnami/spark/jars/jets3t-0.9.4.jar && \
+    curl https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.11.1026/aws-java-sdk-bundle-1.11.1026.jar --output /opt/bitnami/spark/jars/aws-java-sdk-bundle-1.11.1026.jar
+
 USER airflow
 RUN pip install --user --no-cache-dir --upgrade pip &\
     pip install --user --no-cache-dir \
     psycopg2-binary>=2.7.4 \
     pyspark \
+    py4j==0.10.9.5 \
     apache-airflow-providers-docker==3.5.0 \
     apache-airflow-providers-apache-spark==4.0.0 \
     apache-airflow-providers-amazon==7.2.1 \

@@ -153,6 +153,8 @@ services:
       dockerfile: Dockerfile.airflow
       args: 
         AIRFLOW_BASE_IMAGE: *airflow_image
+        AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+        AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
     container_name: airflow_init
     depends_on:
       - airflowdb
@@ -170,6 +172,8 @@ services:
       dockerfile: Dockerfile.airflow
       args:
         AIRFLOW_BASE_IMAGE: *airflow_image
+        AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+        AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
     container_name: airflow_webserver
     depends_on:
       - airflow_init
@@ -190,6 +194,8 @@ services:
       dockerfile: Dockerfile.airflow
       args:
         AIRFLOW_BASE_IMAGE: *airflow_image
+        AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+        AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
     container_name: airflow_scheduler
     depends_on:
       - airflow_init
@@ -197,7 +203,7 @@ services:
     volumes:
       - logs:/opt/airflow/logs
       - ./dags:/opt/airflow/dags
-      - ./src:/opt/airflow/spark-apps/
+      - ./src:/opt/bitnami/spark/src/
       - //var/run/docker.sock:/var/run/docker.sock
     environment: *airflow_environment
     command: scheduler
