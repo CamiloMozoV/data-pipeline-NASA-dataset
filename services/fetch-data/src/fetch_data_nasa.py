@@ -6,6 +6,8 @@ import click
 
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+BUCKET_NAME = "project-bucket-tests"
+S3_KEY = "test-data"
 
 def client_session_boto3(aws_access_key: str, aws_secret_key: str) -> boto3.Session:
     """Return a client session to S3
@@ -62,8 +64,8 @@ def fetch_data_nasa(url: str, filename: str):
         print(f"{error.HTTPError.reason}")
     else:
         upload_file_to_s3(filename=path_file, 
-                          bucket_name="<here-bucket-name>",
-                          s3_key=f"<here-S3-key>"
+                          bucket_name=BUCKET_NAME,
+                          s3_key=f"{S3_KEY}/{filename}"
                         )
 
 if __name__=="__main__":
