@@ -1,6 +1,6 @@
 import os 
 from pyspark.sql import SparkSession
-from src.utils import read_csv_data_from_s3, save_parquet_data_to_s3
+from utils import read_csv_data_from_s3, save_parquet_data_to_s3
 
 def datasets_union(spark_session: SparkSession) -> None:
     """Union (or merge) the two datasets: 
@@ -17,7 +17,7 @@ def datasets_union(spark_session: SparkSession) -> None:
     S3_KEY = "test-data"
     VIIRS_FILENAME = "VIIRS-data"
     MODIS_FILENAME = "MODIS-data"
-    JOIN_DATA = "fires_parquet_dataset."
+    JOIN_DATA = "fires_parquet_dataset"
 
     viirs_data = read_csv_data_from_s3(spark_session, 
                                        BUCKET_NAME, 
