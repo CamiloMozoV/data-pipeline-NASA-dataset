@@ -30,7 +30,7 @@ def datasets_union(spark_session: SparkSession) -> None:
     join_data = viirs_data.unionByName(modis_data, allowMissingColumns=False)
     save_parquet_data_to_s3(join_data, 
                             bucket_name="fires-data-lake-dev", 
-                            s3_key="fires-dataset-dev/", 
+                            s3_key="fires-dataset-dev", 
                             filename=JOIN_DATA)
 
 if __name__=="__main__":
