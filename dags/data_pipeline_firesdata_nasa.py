@@ -6,6 +6,7 @@ from airflow.utils.task_group import TaskGroup
 from airflow.models.baseoperator import chain
 from airflow.providers.docker.operators.docker import DockerOperator
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
+from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor
 
 locals_tz = pendulum.timezone("America/Bogota")
 
@@ -17,8 +18,11 @@ with DAG(
     catchup=False,
     tags=["dev"]
 ):  
-    MODIS_FILENAME = "MODIS-data.csv"
-    VIIRS_FILENAME = "VIIRS-data.csv"
+    MODIS_FILENAME = "MODIS-data"
+    VIIRS_FILENAME = "VIIRS-data"
+    BUCKET_NAME = "project-bucket-tests"
+    S3_KEY = "test-data"
+    AWS_CONN_ID = "aws_conn_id"
     SPARK_SRC="/opt/bitnami/spark/src"
 
     with TaskGroup(group_id="fetch_data_nasa") as fetch_data_nasa:
@@ -29,10 +33,9 @@ with DAG(
             api_version="auto",
             image="fetch-data-nasa",
             command=[
-                # "fetch_data_nasa.py",
                 "https://firms.modaps.eosdis.nasa.gov/data/active_fire/modis-c6.1/csv/MODIS_C6_1_Global_24h.csv",
                 "--filename",
-                MODIS_FILENAME
+                f"{MODIS_FILENAME}.csv"
             ],
             network_mode="airflow-pyspark",
             mounts=[
@@ -46,10 +49,9 @@ with DAG(
             api_version="auto",
             image="fetch-data-nasa",
             command=[
-                # "fetch_data_nasa.py",
                 "https://firms.modaps.eosdis.nasa.gov/data/active_fire/suomi-npp-viirs-c2/csv/SUOMI_VIIRS_C2_Global_24h.csv",
                 "--filename",
-                VIIRS_FILENAME
+                f"{VIIRS_FILENAME}.csv"
             ],
             network_mode="airflow-pyspark",
             mounts=[
@@ -57,6 +59,20 @@ with DAG(
             ],
             auto_remove="force"
         )
+
+    modis_raw_datasensor_s3 = S3KeySensor(
+        task_id="modis_raw_datasensor_s3",
+        bucket_name=BUCKET_NAME,
+        bucket_key=f"{S3_KEY}/{MODIS_FILENAME}.csv",
+        aws_conn_id=AWS_CONN_ID
+    )
+
+    viirs_raw_datasensor_s3 = S3KeySensor(
+        task_id="viirs_raw_datasensor_s3",
+        bucket_name=BUCKET_NAME,
+        bucket_key=f"{S3_KEY}/{MODIS_FILENAME}.csv",
+        aws_conn_id=AWS_CONN_ID
+    )
 
     with TaskGroup(group_id="data_transformation") as data_transformation:
         """Perform the task related to data transformation"""
@@ -85,6 +101,10 @@ with DAG(
             num_executors=1
         )
 
-
     chain([fetch_modis_data, fetch_viirs_data],
+          [modis_raw_datasensor_s3, viirs_raw_datasensor_s3])
+    
+    chain([modis_raw_datasensor_s3, viirs_raw_datasensor_s3],
           [modis_transformation, viirs_transformation])
+    
+
