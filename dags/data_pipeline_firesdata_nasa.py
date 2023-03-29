@@ -101,10 +101,24 @@ with DAG(
             num_executors=1
         )
 
+    datasets_union = SparkSubmitOperator(
+        task_id="datasets_union",
+        application=f"{SPARK_SRC}/datasets_union.py",
+        py_files=f"{SPARK_SRC}/utils.py",
+        name="datasets-union",
+        conn_id="spark_conn_id",
+        jars=f"/opt/bitnami/spark/jars/hadoop-aws-3.3.2.jar,/opt/bitnami/spark/jars/aws-java-sdk-s3-1.12.319.jar,"
+             f"/opt/bitnami/spark/jars/aws-java-sdk-1.12.319.jar,/opt/bitnami/spark/jars/hadoop-common-3.3.4.jar,"
+             f"/opt/bitnami/spark/jars/hadoop-client-3.3.4.jar,/opt/bitnami/spark/jars/aws-java-sdk-bundle-1.11.1026.jar",
+        num_executors=1
+    )
+
     chain([fetch_modis_data, fetch_viirs_data],
           [modis_raw_datasensor_s3, viirs_raw_datasensor_s3])
     
     chain([modis_raw_datasensor_s3, viirs_raw_datasensor_s3],
           [modis_transformation, viirs_transformation])
+    
+    chain(data_transformation, datasets_union)
     
 
