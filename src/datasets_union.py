@@ -12,25 +12,26 @@ def datasets_union(spark_session: SparkSession) -> None:
     ---------
     `spark_session`: `pyspark.sql.SparkSession`
     """
-
-    BUCKET_NAME = "project-bucket-tests"
-    S3_KEY = "test-data"
     VIIRS_FILENAME = "VIIRS-data"
     MODIS_FILENAME = "MODIS-data"
+
     JOIN_DATA = "fires_parquet_dataset"
 
     viirs_data = read_csv_data_from_s3(spark_session, 
-                                       BUCKET_NAME, 
-                                       S3_KEY,
-                                       f"clean-{VIIRS_FILENAME}")
+                                       bucket_name="transition-storage-dev", 
+                                       s3_key="clean-data",
+                                       filename=f"clean-{VIIRS_FILENAME}")
 
     modis_data = read_csv_data_from_s3(spark_session,
-                                       BUCKET_NAME,
-                                       S3_KEY,
-                                       f"clean-{MODIS_FILENAME}")
+                                       bucket_name="transition-storage-dev", 
+                                       s3_key="clean-data",
+                                       filename=f"clean-{MODIS_FILENAME}")
 
     join_data = viirs_data.unionByName(modis_data, allowMissingColumns=False)
-    save_parquet_data_to_s3(join_data, BUCKET_NAME, S3_KEY, JOIN_DATA)
+    save_parquet_data_to_s3(join_data, 
+                            bucket_name="fires-data-lake-dev", 
+                            s3_key="fires-dataset-dev/", 
+                            filename=JOIN_DATA)
 
 if __name__=="__main__":
     # Create a session

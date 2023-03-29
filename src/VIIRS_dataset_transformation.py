@@ -43,16 +43,21 @@ def viirs_data_transformation(df: DataFrame) -> DataFrame:
 
 def main(spark_session: SparkSession) -> None:
 
-    BUCKET_NAME = "project-bucket-tests"
-    S3_KEY = "test-data"
+    BUCKET_NAME = "transition-storage-dev"
     VIIRS_FILENAME = "VIIRS-data"
 
-    raw_df = read_csv_data_from_s3(spark_session, BUCKET_NAME, S3_KEY, filename=f"{VIIRS_FILENAME}.csv")
+    raw_df = read_csv_data_from_s3(spark_session, 
+                                   bucket_name=BUCKET_NAME, 
+                                   s3_key="raw-data", 
+                                   filename=f"{VIIRS_FILENAME}.csv")
 
     # VIIRS data transformation
     clean_df = viirs_data_transformation(raw_df)
 
-    save_csv_data_to_s3(clean_df, BUCKET_NAME, S3_KEY, filename=f"clean-{VIIRS_FILENAME}")
+    save_csv_data_to_s3(clean_df, 
+                        bucket_name=BUCKET_NAME, 
+                        s3_key="clean-data", 
+                        filename=f"clean-{VIIRS_FILENAME}")
     
 
 if __name__=="__main__":

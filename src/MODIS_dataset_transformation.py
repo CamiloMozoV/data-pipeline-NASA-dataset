@@ -68,11 +68,13 @@ def modis_data_transformation(df: DataFrame) -> DataFrame:
 
 def main(spark_session: SparkSession) -> None:
 
-    BUCKET_NAME = "project-bucket-tests"
-    S3_KEY = "test-data"
+    BUCKET_NAME = "transition-storage-dev"
     MODIS_FILENAME = "MODIS-data"
 
-    raw_df = read_csv_data_from_s3(spark_session, BUCKET_NAME, S3_KEY, filename=f"{MODIS_FILENAME}.csv")
+    raw_df = read_csv_data_from_s3(spark_session, 
+                                   bucket_name=BUCKET_NAME, 
+                                   s3_key="raw-data", 
+                                   filename=f"{MODIS_FILENAME}.csv")
     
     # MODIS data transformation
     clean_df = modis_data_transformation(raw_df)
@@ -80,7 +82,7 @@ def main(spark_session: SparkSession) -> None:
     # Uploading Data
     save_csv_data_to_s3(clean_df, 
                  bucket_name=BUCKET_NAME,
-                 s3_key=S3_KEY,
+                 s3_key="clean-data",
                  filename=f"clean-{MODIS_FILENAME}"
                 )
 

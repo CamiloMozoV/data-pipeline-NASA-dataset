@@ -46,7 +46,7 @@ def save_csv_data_to_s3(df: DataFrame,
        .option('fs.s3a.committer.name', 'file')
        .option('fs.s3a.committer.staging.conflict-mode', 'replace')
        .option("fs.s3a.fast.upload.buffer", "bytebuffer")
-       .mode("append")
+       .mode("overwrite")
        .csv(path=f"s3a://{bucket_name}/{s3_key}/{filename}",
             sep=',')
       )

@@ -20,10 +20,15 @@ with DAG(
 ):  
     MODIS_FILENAME = "MODIS-data"
     VIIRS_FILENAME = "VIIRS-data"
-    BUCKET_NAME = "project-bucket-tests"
-    S3_KEY = "test-data"
+
+    BUCKET_NAME = "transition-storage-dev"
+    S3_KEY = "raw-data"
     AWS_CONN_ID = "aws_conn_id"
+
     SPARK_SRC="/opt/bitnami/spark/src"
+    JARS = (f"/opt/bitnami/spark/jars/hadoop-aws-3.3.2.jar,/opt/bitnami/spark/jars/aws-java-sdk-s3-1.12.319.jar,"
+            f"/opt/bitnami/spark/jars/aws-java-sdk-1.12.319.jar,/opt/bitnami/spark/jars/hadoop-common-3.3.4.jar,"
+            f"/opt/bitnami/spark/jars/hadoop-client-3.3.4.jar,/opt/bitnami/spark/jars/aws-java-sdk-bundle-1.11.1026.jar")
 
     with TaskGroup(group_id="fetch_data_nasa") as fetch_data_nasa:
         """Fetch data from NASA website"""
@@ -83,9 +88,7 @@ with DAG(
             py_files=f"{SPARK_SRC}/utils.py",
             name="modis-transformation",
             conn_id="spark_conn_id",
-            jars=f"/opt/bitnami/spark/jars/hadoop-aws-3.3.2.jar,/opt/bitnami/spark/jars/aws-java-sdk-s3-1.12.319.jar,"
-                 f"/opt/bitnami/spark/jars/aws-java-sdk-1.12.319.jar,/opt/bitnami/spark/jars/hadoop-common-3.3.4.jar,"
-                 f"/opt/bitnami/spark/jars/hadoop-client-3.3.4.jar,/opt/bitnami/spark/jars/aws-java-sdk-bundle-1.11.1026.jar",
+            jars=JARS,
             num_executors=1
         )
 
@@ -95,9 +98,7 @@ with DAG(
             py_files=f"{SPARK_SRC}/utils.py",
             name="viirs-transformation",
             conn_id="spark_conn_id",
-            jars=f"/opt/bitnami/spark/jars/hadoop-aws-3.3.2.jar,/opt/bitnami/spark/jars/aws-java-sdk-s3-1.12.319.jar,"
-                 f"/opt/bitnami/spark/jars/aws-java-sdk-1.12.319.jar,/opt/bitnami/spark/jars/hadoop-common-3.3.4.jar,"
-                 f"/opt/bitnami/spark/jars/hadoop-client-3.3.4.jar,/opt/bitnami/spark/jars/aws-java-sdk-bundle-1.11.1026.jar",
+            jars=JARS,
             num_executors=1
         )
 
@@ -107,16 +108,14 @@ with DAG(
         py_files=f"{SPARK_SRC}/utils.py",
         name="datasets-union",
         conn_id="spark_conn_id",
-        jars=f"/opt/bitnami/spark/jars/hadoop-aws-3.3.2.jar,/opt/bitnami/spark/jars/aws-java-sdk-s3-1.12.319.jar,"
-             f"/opt/bitnami/spark/jars/aws-java-sdk-1.12.319.jar,/opt/bitnami/spark/jars/hadoop-common-3.3.4.jar,"
-             f"/opt/bitnami/spark/jars/hadoop-client-3.3.4.jar,/opt/bitnami/spark/jars/aws-java-sdk-bundle-1.11.1026.jar",
+        jars=JARS,
         num_executors=1
     )
 
     chain([fetch_modis_data, fetch_viirs_data],
           [modis_raw_datasensor_s3, viirs_raw_datasensor_s3])
     
-    chain([modis_raw_datasensor_s3, viirs_raw_datasensor_s3],
+    chain([modis_raw_datasensor_s3, viirs_raw_datasensor_s3], 
           [modis_transformation, viirs_transformation])
     
     chain(data_transformation, datasets_union)
