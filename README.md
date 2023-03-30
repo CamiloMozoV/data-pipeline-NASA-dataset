@@ -32,7 +32,7 @@ The workflow consists of:
 > - Terraform version v1.4.2
 >
 > In addition, to have AWS credentials with sufficient permissions to perform 
-> differently types of operations, as well as have set up AWS CLI 
+> differently types of operations, as well as having AWS CLI configured. 
 
 Inside the terraform directory, execute the following command. 
 ```bash
